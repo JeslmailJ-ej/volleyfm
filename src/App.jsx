@@ -1,34 +1,85 @@
 import { useEffect, useState } from 'react'
 import { signInWithKakao, signOut, getCurrentUser, onAuthChange } from './api/auth'
+import { getMyProfile } from './api/profiles'
+import { getMyTeams } from './api/teams'
+import ProfileSetup from './pages/ProfileSetup'
+import CreateTeam from './pages/CreateTeam'
 
-function App() {
+export default function App() {
   const [user, setUser] = useState(null)
+  const [profile, setProfile] = useState(null)
+  const [teams, setTeams] = useState([])
+  const [loading, setLoading] = useState(true)
 
+  // 1) 로그인 상태 지켜보기 (전 단계와 같음)
   useEffect(() => {
-    getCurrentUser().then(setUser)          // 처음 열 때 로그인 상태 확인
-    const unsubscribe = onAuthChange(setUser) // 로그인·로그아웃하면 화면 바로 바꾸기
+    getCurrentUser().then(setUser)
+    const unsubscribe = onAuthChange(setUser)
     return unsubscribe
   }, [])
 
-  const nickname =
-    user?.user_metadata?.full_name ??
-    user?.user_metadata?.name ??
-    user?.user_metadata?.nickname ??
-    '이름 없음'
+  // 2) 로그인한 사람이 바뀌면 → 프로필 확인
+  useEffect(() => {
+    if (!user) {
+      setProfile(null)
+      setTeams([])
+      setLoading(false)
+      return
+    }
+    setLoading(true)
+    getMyProfile(user.id)
+      .then(setProfile)
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [user?.id]) // 사용자 id가 바뀔 때만 다시 실행
+
+  // 3) 프로필이 있으면 → 내 팀 목록 불러오기
+  useEffect(() => {
+    if (profile) loadTeams()
+  }, [profile?.id])
+
+  function loadTeams() {
+    getMyTeams(user.id).then(setTeams).catch(console.error)
+  }
+
+  // 팀을 만들면 DB에서 대표 팀(main_team_id)이 바뀔 수 있으니 프로필도 다시 불러온다
+  function handleTeamCreated() {
+    getMyProfile(user.id).then(setProfile).catch(console.error)
+    loadTeams()
+  }
+
+  // ---------- 화면 고르기 (조건부 렌더링) ----------
+  if (loading) return <p>불러오는 중...</p>
+
+  if (!user) {
+    return <button onClick={signInWithKakao}>카카오로 시작하기</button>
+  }
+
+  if (!profile) {
+    return <ProfileSetup user={user} onDone={setProfile} />
+  }
 
   return (
-    <main>
-      <h1>VolleyFM</h1>
-      {user ? (
-        <>
-          <p>로그인됨: {nickname}</p>
-          <button onClick={signOut}>로그아웃</button>
-        </>
+    <div>
+      <p>
+        {profile.nickname}님 안녕하세요 <button onClick={signOut}>로그아웃</button>
+      </p>
+
+      <h2>내 팀</h2>
+      {teams.length === 0 ? (
+        <p>아직 소속된 팀이 없어요</p>
       ) : (
-        <button onClick={signInWithKakao}>카카오로 시작하기</button>
+        <ul>
+          {teams.map(({ role, team }) => (
+            <li key={team.id}>
+              {team.name} ({team.district} · {team.gender_type}) — {role}
+              {team.id === profile.main_team_id && ' ⭐대표 팀'}
+            </li>
+          ))}
+        </ul>
       )}
-    </main>
+
+      <CreateTeam onCreated={handleTeamCreated} />
+    </div>
   )
 }
-
-export default App
