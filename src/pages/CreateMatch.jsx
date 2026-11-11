@@ -3,10 +3,7 @@ import { createMatch, MATCH_FORMATS } from '../api/matches'
 import { GENDER_TYPES } from '../api/teams'
 import { todayString } from '../utils/date'
 import TimeSelect from '../components/TimeSelect'
-
-// ⚠️ 임시 좌표 (대전시청). 다음 단계에서 카카오 지도 장소 검색으로 바꾼다
-const TEMP_LAT = 36.3504
-const TEMP_LNG = 127.3845
+import PlaceSearch from '../components/PlaceSearch'
 
 // S-05 연습경기 등록 (FR-06)
 // props: userId, teams = 내 팀 목록, mainTeamId = 대표 팀 id
@@ -16,8 +13,7 @@ export default function CreateMatch({ userId, teams, mainTeamId }) {
   const [matchDate, setMatchDate] = useState('')
   const [startTime, setStartTime] = useState('')
   const [endTime, setEndTime] = useState('')
-  const [placeName, setPlaceName] = useState('')
-  const [placeAddress, setPlaceAddress] = useState('')
+  const [place, setPlace] = useState(null)
   const [matchFormat, setMatchFormat] = useState('')
   const [genderType, setGenderType] = useState(findTeam(firstTeamId)?.gender_type ?? '')
   const [message, setMessage] = useState('')
@@ -41,7 +37,7 @@ export default function CreateMatch({ userId, teams, mainTeamId }) {
     if (matchDate < todayString()) return '지난 날짜는 선택할 수 없어요'
     if (!startTime || !endTime) return '시작·종료 시간을 입력해 주세요'
     if (endTime <= startTime) return '종료 시간은 시작 시간보다 늦어야 해요'
-    if (!placeName.trim() || !placeAddress.trim()) return '장소 이름과 주소를 입력해 주세요'
+    if (!place) return '장소를 검색해서 선택해주세요'
     if (!matchFormat) return '경기 방식을 선택해 주세요'
     if (!genderType) return '성별을 선택해 주세요'
     return ''
@@ -58,7 +54,7 @@ export default function CreateMatch({ userId, teams, mainTeamId }) {
     try {
       await createMatch({
         userId, hostTeamId, matchDate, startTime, endTime,
-        placeName, placeAddress, lat: TEMP_LAT, lng: TEMP_LNG,
+        placeName: place.name, placeAddress: place.address, lat: place.lat, lng: place.lng,
         matchFormat, genderType, message,
       })
       setDoneMessage('연습경기를 등록했어요!')
@@ -90,9 +86,8 @@ export default function CreateMatch({ userId, teams, mainTeamId }) {
       ~
       <TimeSelect value={endTime} onChange={setEndTime} />
 
-      <p>장소 (지도 검색은 다음 단계)</p>
-      <input value={placeName} onChange={(e) => setPlaceName(e.target.value)} placeholder="장소 이름" maxLength={100} />
-      <input value={placeAddress} onChange={(e) => setPlaceAddress(e.target.value)} placeholder="주소" maxLength={200} />
+      <p>장소</p>
+      <PlaceSearch value={place} onSelect={setPlace} />
 
       <p>경기 방식</p>
       {MATCH_FORMATS.map((f) => (
@@ -110,10 +105,8 @@ export default function CreateMatch({ userId, teams, mainTeamId }) {
         </label>
       ))}
 
-      <label>
-        한마디 (선택, {message.length}/200)
-        <textarea value={message} onChange={(e) => setMessage(e.target.value)} maxLength={200} />
-      </label>
+      <p>한마디 (선택, {message.length}/200)</p>
+      <textarea value={message} onChange={(e) => setMessage(e.target.value)} maxLength={200} />
 
       {errorMessage && <p style={{ color: 'crimson' }}>{errorMessage}</p>}
       {doneMessage && <p style={{ color: 'green' }}>{doneMessage}</p>}
