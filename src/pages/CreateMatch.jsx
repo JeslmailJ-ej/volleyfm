@@ -61,6 +61,9 @@ export default function CreateMatch({ userId, teams, mainTeamId }) {
       setMatchDate('')
       setStartTime('')
       setEndTime('')
+      setPlace(null)                                         
+      setMatchFormat('')                                     
+      setGenderType(findTeam(hostTeamId)?.gender_type ?? '') 
     } catch (err) {
       console.error(err)
       setErrorMessage(err.message ?? '등록하지 못했어요')
