@@ -44,8 +44,8 @@ export default function CreateTeam({ onCreated }) {
 
   // 팀을 만든 뒤에는 초대 코드 화면
   if (inviteCode) {
-    return (
-      <div>
+    return ( 
+      <div> 
         <h2>팀이 만들어졌어요!</h2>
         <p>팀원에게 이 초대 코드를 알려주세요</p>
         <p style={{ fontSize: 28, fontWeight: 'bold', letterSpacing: 4 }}>{inviteCode}</p>

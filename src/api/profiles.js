@@ -9,8 +9,8 @@ export async function getMyProfile(userId) {
   const { data, error } = await supabase
     .from('profiles')
     .select(PROFILE_COLUMNS)
-    .eq('id', userId)
-    .maybeSingle() // 0줄이면 null, 1줄이면 그 줄 (2줄 이상이면 오류)
+    .eq('id', userId) 
+    .maybeSingle() // 0줄이면 null, 1줄이면 그 줄 (2줄 이상이면 오류) 
   if (error) throw error
   return data
 }

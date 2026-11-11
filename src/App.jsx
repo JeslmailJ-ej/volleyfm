@@ -4,6 +4,7 @@ import { getMyProfile } from './api/profiles'
 import { getMyTeams } from './api/teams'
 import ProfileSetup from './pages/ProfileSetup'
 import CreateTeam from './pages/CreateTeam'
+import JoinTeam from './pages/JoinTeam'
 
 export default function App() {
   const [user, setUser] = useState(null)
@@ -42,8 +43,8 @@ export default function App() {
     getMyTeams(user.id).then(setTeams).catch(console.error)
   }
 
-  // 팀을 만들면 DB에서 대표 팀(main_team_id)이 바뀔 수 있으니 프로필도 다시 불러온다
-  function handleTeamCreated() {
+  // 팀을 만들거나 가입하면 DB에서 대표 팀(main_team_id)이 바뀔 수 있으니 프로필도 다시 불러온다
+  function handleTeamChanged() {
     getMyProfile(user.id).then(setProfile).catch(console.error)
     loadTeams()
   }
@@ -79,7 +80,8 @@ export default function App() {
         </ul>
       )}
 
-      <CreateTeam onCreated={handleTeamCreated} />
+      <JoinTeam onJoined={handleTeamChanged} />
+      <CreateTeam onCreated={handleTeamChanged} />
     </div>
   )
 }
