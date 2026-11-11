@@ -5,6 +5,7 @@ import { getMyTeams } from './api/teams'
 import ProfileSetup from './pages/ProfileSetup'
 import CreateTeam from './pages/CreateTeam'
 import JoinTeam from './pages/JoinTeam'
+import CreateMatch from './pages/CreateMatch'
 
 export default function App() {
   const [user, setUser] = useState(null)
@@ -78,6 +79,10 @@ export default function App() {
             </li>
           ))}
         </ul>
+      )}
+
+      {teams.length > 0 && (
+        <CreateMatch userId={user.id} teams={teams} mainTeamId={profile.main_team_id} />
       )}
 
       <JoinTeam onJoined={handleTeamChanged} />
