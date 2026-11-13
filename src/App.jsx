@@ -6,12 +6,14 @@ import ProfileSetup from './pages/ProfileSetup'
 import CreateTeam from './pages/CreateTeam'
 import JoinTeam from './pages/JoinTeam'
 import CreateMatch from './pages/CreateMatch'
+import WeekMatchList from './components/WeekMatchList'
 
 export default function App() {
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
   const [teams, setTeams] = useState([])
   const [loading, setLoading] = useState(true)
+  const [matchVersion, setMatchVersion] = useState(0)
 
   // 1) 로그인 상태 지켜보기 (전 단계와 같음)
   useEffect(() => {
@@ -54,7 +56,12 @@ export default function App() {
   if (loading) return <p>불러오는 중...</p>
 
   if (!user) {
-    return <button onClick={signInWithKakao}>카카오로 시작하기</button>
+    return (
+    <div>
+      <WeekMatchList refreshKey={matchVersion} />
+      <button onClick={signInWithKakao}>카카오로 시작하기</button> 
+    </div>
+    )
   }
 
   if (!profile) {
@@ -66,6 +73,8 @@ export default function App() {
       <p>
         {profile.nickname}님 안녕하세요 <button onClick={signOut}>로그아웃</button>
       </p>
+
+      <WeekMatchList refreshKey={matchVersion} />
 
       <h2>내 팀</h2>
       {teams.length === 0 ? (
@@ -82,7 +91,12 @@ export default function App() {
       )}
 
       {teams.length > 0 && (
-        <CreateMatch userId={user.id} teams={teams} mainTeamId={profile.main_team_id} />
+        <CreateMatch 
+          userId={user.id} 
+          teams={teams} 
+          mainTeamId={profile.main_team_id}
+          onCreated={() => setMatchVersion((v) => v + 1)} 
+        />
       )}
 
       <JoinTeam onJoined={handleTeamChanged} />

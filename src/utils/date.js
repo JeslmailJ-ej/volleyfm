@@ -11,3 +11,23 @@ export function toDateString(date) {
 export function todayString() {
   return toDateString(new Date())
 }
+
+export function startOfWeek(date) {
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+  const day = d.getDay()
+  const diff = day === 0 ? -6 : 1 - day // 이건 왜? 뭐때문에 있는건지, 화면에 뭐가 보이는지?
+  d.setDate(d.getDate() + diff)
+  return d
+}
+
+export function addDays(date, n) {
+  const d = new Date(date)
+  d.setDate(d.getDate() + n)
+  return d
+}
+
+const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
+
+export function formatDayLabel(date) {
+  return `${date.getMonth() + 1}/${date.getDate()}(${WEEKDAYS[date.getDay()]})`
+}

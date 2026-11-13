@@ -7,7 +7,7 @@ import PlaceSearch from '../components/PlaceSearch'
 
 // S-05 연습경기 등록 (FR-06)
 // props: userId, teams = 내 팀 목록, mainTeamId = 대표 팀 id
-export default function CreateMatch({ userId, teams, mainTeamId }) {
+export default function CreateMatch({ userId, teams, mainTeamId, onCreated }) {
   const firstTeamId = mainTeamId ?? teams[0].team.id // 대표 팀이 기본, 없으면 첫 팀
   const [hostTeamId, setHostTeamId] = useState(firstTeamId)
   const [matchDate, setMatchDate] = useState('')
@@ -58,6 +58,7 @@ export default function CreateMatch({ userId, teams, mainTeamId }) {
         matchFormat, genderType, message,
       })
       setDoneMessage('연습경기를 등록했어요!')
+      onCreated()
       setMatchDate('')
       setStartTime('')
       setEndTime('')

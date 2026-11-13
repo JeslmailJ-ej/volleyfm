@@ -29,3 +29,26 @@ export async function createMatch({
   if (error) throw error
   return data.id
 }
+
+// 목록 화면에 필요한 칸만 + 연결된 팀 정보
+// matches에서 teams로 가는 길(외래키)이 두 개(등록 팀, 상대 팀)라서 어느 길인지 이름으로 알려준다
+const MATCH_LIST_COLUMNS = `
+  id, match_date, start_time, end_time, place_name, match_format, gender_type, status,
+  host_team:teams!matches_host_team_id_fkey (id, name, district),
+  opponent_team:teams!matches_opponent_team_id_fkey (id, name)
+`
+
+// 기간 안의 경기 목록 (FR-04 이번 주 경기) — 로그인 안 해도 볼 수 있다
+// from, to: 'YYYY-MM-DD' (둘 다 포함)
+export async function getMatchesBetween(from, to) {
+  const { data, error } = await supabase
+    .from('matches')
+    .select(MATCH_LIST_COLUMNS)
+    .gte('match_date', from)  // match_date >= from
+    .lte('match_date', to)    // match_date <= to
+    .neq('status', '취소')    // 취소된 경기는 빼고
+    .order('match_date')
+    .order('start_time')
+  if (error) throw error
+  return data
+}
