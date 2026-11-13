@@ -46,7 +46,7 @@ export async function getMatchesBetween(from, to) {
     .select(MATCH_LIST_COLUMNS)
     .gte('match_date', from)  // match_date >= from
     .lte('match_date', to)    // match_date <= to
-    .neq('status', '취소')    // 취소된 경기는 빼고
+    .eq('status', '모집중')    // 기간 안의 모집중 경기 목록 (FR-04) — 로그인 안 해도 볼 수 있다
     .order('match_date')
     .order('start_time')
   if (error) throw error

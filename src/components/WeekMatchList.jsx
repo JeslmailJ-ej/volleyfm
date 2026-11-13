@@ -2,6 +2,15 @@ import { useEffect, useState } from 'react'
 import { getMatchesBetween } from '../api/matches'
 import { startOfWeek, addDays, toDateString, formatDayLabel } from '../utils/date'
 
+function isUpcoming(match) {
+  const now = new Date()
+  const today = toDateString(now)
+  const nowTime = now.toTimeString().slice(0, 8)
+  if(match.match_date > today) return true
+  if(match.match_date < today) return false
+  return match.start_time > nowTime
+}
+
 // 홈: 한 주(월~일) 경기 목록 (FR-04)
 // props: refreshKey = 이 값이 바뀌면 목록을 다시 불러온다 (경기를 새로 등록했을 때)
 export default function WeekMatchList({ refreshKey }) {
@@ -33,7 +42,7 @@ export default function WeekMatchList({ refreshKey }) {
   return (
     <section>
       <h2>{isThisWeek ? '이번 주 경기' : '경기 일정'} ({formatDayLabel(days[0])} ~ {formatDayLabel(days[6])})</h2>
-      <button onClick={() => setWeekStart(addDays(weekStart, -7))}>◀ 지난 주</button>
+      <button onClick={() => setWeekStart(addDays(weekStart, -7))} disabled={isThisWeek}>◀ 지난 주</button>
       <button onClick={() => setWeekStart(startOfWeek(new Date()))} disabled={isThisWeek}>이번 주</button>
       <button onClick={() => setWeekStart(addDays(weekStart, 7))}>다음 주 ▶</button>
 
@@ -42,7 +51,7 @@ export default function WeekMatchList({ refreshKey }) {
 
       {!loading && !errorMessage && days.map((day) => {
         const dateString = toDateString(day)
-        const dayMatches = matches.filter((m) => m.match_date === dateString) // 그날 경기만
+        const dayMatches = matches.filter((m) => m.match_date === dateString && isUpcoming(m)) // 그날 경기만
         return (
           <div key={dateString}>
             <h3>{formatDayLabel(day)}</h3>
