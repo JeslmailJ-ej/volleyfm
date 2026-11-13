@@ -7,6 +7,8 @@ import CreateTeam from './pages/CreateTeam'
 import JoinTeam from './pages/JoinTeam'
 import CreateMatch from './pages/CreateMatch'
 import WeekMatchList from './components/WeekMatchList'
+import { Routes, Route, Link } from 'react-router'
+import MatchDetail from './pages/MatchDetail'
 
 export default function App() {
   const [user, setUser] = useState(null)
@@ -53,54 +55,65 @@ export default function App() {
   }
 
   // ---------- 화면 고르기 (조건부 렌더링) ----------
-  if (loading) return <p>불러오는 중...</p>
+  function renderHome() {
+    if (loading) return <p>불러오는 중...</p>
 
-  if (!user) {
+    if (!user) {
+      return (
+      <div>
+        <WeekMatchList refreshKey={matchVersion} />
+        <button onClick={signInWithKakao}>카카오로 시작하기</button> 
+      </div>
+      )
+    }
+
+    if (!profile) {
+      return <ProfileSetup user={user} onDone={setProfile} />
+    }
+
     return (
-    <div>
-      <WeekMatchList refreshKey={matchVersion} />
-      <button onClick={signInWithKakao}>카카오로 시작하기</button> 
-    </div>
+      <div>
+        <p>
+          {profile.nickname}님 안녕하세요 <button onClick={signOut}>로그아웃</button>
+        </p>
+
+        <WeekMatchList refreshKey={matchVersion} />
+
+        <h2>내 팀</h2>
+        {teams.length === 0 ? (
+          <p>아직 소속된 팀이 없어요</p>
+        ) : (
+          <ul>
+            {teams.map(({ role, team }) => (
+              <li key={team.id}>
+                {team.name} ({team.district} · {team.gender_type}) — {role}
+                {team.id === profile.main_team_id && ' ⭐대표 팀'}
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {teams.length > 0 && (
+          <CreateMatch 
+            userId={user.id} 
+            teams={teams} 
+            mainTeamId={profile.main_team_id}
+            onCreated={() => setMatchVersion((v) => v + 1)} 
+          />
+        )}
+
+        <JoinTeam onJoined={handleTeamChanged} />
+        <CreateTeam onCreated={handleTeamChanged} />
+      </div>
     )
   }
 
-  if (!profile) {
-    return <ProfileSetup user={user} onDone={setProfile} />
-  }
-
+  //---- 주소에 따라 화면 고르기 ----
   return (
-    <div>
-      <p>
-        {profile.nickname}님 안녕하세요 <button onClick={signOut}>로그아웃</button>
-      </p>
-
-      <WeekMatchList refreshKey={matchVersion} />
-
-      <h2>내 팀</h2>
-      {teams.length === 0 ? (
-        <p>아직 소속된 팀이 없어요</p>
-      ) : (
-        <ul>
-          {teams.map(({ role, team }) => (
-            <li key={team.id}>
-              {team.name} ({team.district} · {team.gender_type}) — {role}
-              {team.id === profile.main_team_id && ' ⭐대표 팀'}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {teams.length > 0 && (
-        <CreateMatch 
-          userId={user.id} 
-          teams={teams} 
-          mainTeamId={profile.main_team_id}
-          onCreated={() => setMatchVersion((v) => v + 1)} 
-        />
-      )}
-
-      <JoinTeam onJoined={handleTeamChanged} />
-      <CreateTeam onCreated={handleTeamChanged} />
-    </div>
+    <Routes>
+      <Route path="/" element={renderHome()} />
+      <Route path="/matches/:matchId" element={<MatchDetail />} />
+      <Route path="*" element={<div><p>페이지를 찾을 수 없어요</p><Link to="/">홈으로</Link></div>} />
+    </Routes>
   )
 }

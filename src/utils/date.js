@@ -13,11 +13,11 @@ export function todayString() {
 }
 
 export function startOfWeek(date) {
-  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate())
-  const day = d.getDay()
-  const diff = day === 0 ? -6 : 1 - day // 이건 왜? 뭐때문에 있는건지, 화면에 뭐가 보이는지?
-  d.setDate(d.getDate() + diff)
-  return d
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate()) //Fri Nov 13 2026 00:00:00 GMT+0900 (한국 표준시)
+  const day = d.getDay() // 5 - 금요일이라
+  const diff = day === 0 ? -6 : 1 - day // 월요일 날짜 찾으려고 하는거 diff -4임
+  d.setDate(d.getDate() + diff) // getDate -> 13 - 4 = 9 11월 9일이 월요일
+  return d // 위에서 set했으니까 11월 9일로 셋팅 되어 있음.
 }
 
 export function addDays(date, n) {
@@ -30,4 +30,13 @@ const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
 
 export function formatDayLabel(date) {
   return `${date.getMonth() + 1}/${date.getDate()}(${WEEKDAYS[date.getDay()]})`
+}
+
+export function isUpcoming(match) {
+  const now = new Date() // Fri Nov 13 2026 09:49:12 GMT+0900 (한국 표준시)
+  const today = toDateString(now) // 2026-11-13
+  const nowTime = now.toTimeString().slice(0, 8) // 09:49:12
+  if(match.match_date > today) return true
+  if(match.match_date < today) return false
+  return match.start_time > nowTime
 }

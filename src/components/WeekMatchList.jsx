@@ -1,15 +1,7 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router'
 import { getMatchesBetween } from '../api/matches'
-import { startOfWeek, addDays, toDateString, formatDayLabel } from '../utils/date'
-
-function isUpcoming(match) {
-  const now = new Date()
-  const today = toDateString(now)
-  const nowTime = now.toTimeString().slice(0, 8)
-  if(match.match_date > today) return true
-  if(match.match_date < today) return false
-  return match.start_time > nowTime
-}
+import { startOfWeek, addDays, toDateString, formatDayLabel, isUpcoming } from '../utils/date'
 
 // 홈: 한 주(월~일) 경기 목록 (FR-04)
 // props: refreshKey = 이 값이 바뀌면 목록을 다시 불러온다 (경기를 새로 등록했을 때)
@@ -23,7 +15,7 @@ export default function WeekMatchList({ refreshKey }) {
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
   const from = toDateString(days[0])
   const to = toDateString(days[6])
-  const isThisWeek = from === toDateString(startOfWeek(new Date()))
+  const isThisWeek = from === toDateString(startOfWeek(new Date())) //그 주 시작을 알려줌(월요일)
 
   useEffect(() => {
     let ignore = false // 주를 빠르게 넘길 때, 늦게 도착한 옛날 응답은 무시하기
@@ -61,11 +53,13 @@ export default function WeekMatchList({ refreshKey }) {
               <ul>
                 {dayMatches.map((m) => (
                   <li key={m.id}>
-                    {m.start_time.slice(0, 5)}~{m.end_time.slice(0, 5)}{' '}
-                    <b>{m.host_team.name}</b>({m.host_team.district}){' '}
-                    {m.opponent_team && <>vs <b>{m.opponent_team.name}</b>{' '}</>}
-                    · {m.match_format} · {m.gender_type} · {m.place_name}{' '}
-                    [{m.status}]
+                    <Link to={`/matches/${m.id}`}>
+                      {m.start_time.slice(0, 5)}~{m.end_time.slice(0, 5)}{' '}
+                      <b>{m.host_team.name}</b>({m.host_team.district}){' '}
+                      {m.opponent_team && <>vs <b>{m.opponent_team.name}</b>{' '}</>}
+                      · {m.match_format} · {m.gender_type} · {m.place_name}{' '}
+                      [{m.status}]
+                    </Link>
                   </li>
                 ))}
               </ul>
