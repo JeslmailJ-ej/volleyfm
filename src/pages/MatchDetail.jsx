@@ -61,8 +61,8 @@ export default function MatchDetail() {
     const title = `${host.name} 연습경기 · ${formatDayLabel(date)} ${match.start_time.slice(0, 5)}`
     setShareMessage('')
     try{
-      if(navigation.share) {
-        await navigation.share({ title, text: title, url })
+      if(navigator.share) {
+        await navigator.share({ title, text: title, url })
       } else {
         await navigator.clipboard.writeText(url)
         setShareMessage('링크를 복사했어요')
