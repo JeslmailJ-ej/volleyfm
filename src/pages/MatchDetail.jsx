@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { getMatchById } from '../api/matches'
 import { getTeamStats } from '../api/teams'
-import { formatDayLabel, isUpcoming, formatCareer } from '../utils/date'
+import { formatDayLabel, formatCareer } from '../utils/date'
 import PlaceMap from '../components/PlaceMap'
+import MatchBottomArea from '../components/MatchBottomArea'
 
 // S-04 연습경기 상세 (FR-08) — 로그인 안 해도 볼 수 있다
 // 주소: /matches/경기ID
-export default function MatchDetail() {
+// props: user = 로그인한 사람(없으면 null), teams = 내가 속한 팀 [{ role, team }], mainTeamId = 대표 팀 
+export default function MatchDetail({ user, teams, mainTeamId }) {
   const { matchId } = useParams() // 주소의 :matchId 자리에 있는 값을 꺼낸다
   const [match, setMatch] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -116,16 +118,7 @@ export default function MatchDetail() {
       )}
 
       <hr />
-      <BottomArea match={match} />
+      <MatchBottomArea match={match} user={user} teams={teams} mainTeamId={mainTeamId} />
     </div>
   )
-}
-
-// 하단 영역 (FR-08 3번 표)
-// 18-①에서는 경기 상태로만 나눈다. "보는 사람이 누구냐"에 따른 구분은 18-③에서
-function BottomArea({ match }) {
-  if (match.status === '취소') return <p>취소된 경기예요</p>
-  if (!isUpcoming(match)) return <p>지난 경기예요</p>
-  if (match.status === '확정') return <p>모집이 마감된 경기예요</p>
-  return <p>신청 기능은 준비 중이에요</p> // 18-③에서 신청 영역으로 바꾼다
 }

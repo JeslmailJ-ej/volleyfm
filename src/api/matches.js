@@ -75,3 +75,16 @@ export async function getMatchById(matchId) {
   if(error) throw error
   return data
 }
+
+// 이 팀이 이 날짜에 경기가 있나? (FR-07 미리 확인용 — 진짜 검사는 006 DB 함수가 한다)
+// 우리 팀이 등록한 경기(모집중·확정) 또는 상대로 확정된 경기
+export async function hasTeamMatchOn(teamId, date) {
+  const { count, error } = await supabase
+    .from('matches')
+    .select('id', { count: 'exact', head: true }) // 줄 내용은 안 받고 개수만
+    .eq('match_date', date)
+    .in('status', ['모집중', '확정'])
+    .or(`host_team_id.eq.${teamId},opponent_team_id.eq.${teamId}`) // 등록 팀이거나 상대 팀
+  if(error) throw error
+  return count > 0
+}

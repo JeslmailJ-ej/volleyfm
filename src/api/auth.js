@@ -4,7 +4,7 @@ import { supabase } from './supabaseClient'
 export async function signInWithKakao() {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'kakao',
-    options: { redirectTo: window.location.origin },
+    options: { redirectTo: window.location.href },
   })
   if (error) throw error
 }
@@ -27,4 +27,11 @@ export function onAuthChange(callback) {
     callback(session?.user ?? null)
   })
   return () => data.subscription.unsubscribe()
+}
+
+// 🧪 개발용: 이메일·비밀번호 로그인 (Supabase 대시보드에서 직접 만든 테스트 계정 전용)
+// 서비스 로그인은 카카오만. 이 함수는 DevLogin(개발 서버에서만 보임)에서만 쓴다
+export async function signInWithPasswordForDev(email, password) {
+  const { error } = await supabase.auth.signInWithPassword({ email, password })
+  if(error) throw error
 }
