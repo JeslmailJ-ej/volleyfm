@@ -16,7 +16,9 @@ export default function MatchBottomArea({ match, user, teams, mainTeamId }) {
 
   if (match.status === '확정') {
     if (isHostMember || isOpponentMember) {
-      const otherName = isHostMember ? match.opponent_team.name : match.host_team.name // 우리 쪽에서 본 상대
+      const otherName = isHostMember 
+        ? match.opponent_team?.name ?? '상대 팀 미정' 
+        :  match.host_team.name // 우리 쪽에서 본 상대
       return (
         <div>
           <p>확정된 경기예요 · vs {otherName}</p>
