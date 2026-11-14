@@ -57,3 +57,12 @@ export async function getInviteCode(teamId) {
   if (error) throw error
   return data
 }
+
+// 팀 인원·평균 배구 경력 (FR-08) — 005의 DB 함수. 로그인 안 해도 볼 수 있다
+// 돌려받는 값: { member_count: 3, avg_career_months: 38 }
+
+export async function getTeamStats(teamId) {
+  const { data, error } = await supabase.rpc('get_team_stats', { p_team_id: teamId })
+  if(error) throw error
+  return data[0] // returns table 함수라 배열로 온다 → 첫 줄만 (findTeamByCode와 같음)
+}

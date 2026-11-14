@@ -40,3 +40,12 @@ export function isUpcoming(match) {
   if(match.match_date < today) return false
   return match.start_time > nowTime
 }
+
+// 개월 수 → 화면용 글자 (FR-08 평균 경력): 38 → '3년 2개월', 24 → '2년', 5 → '5개월'
+export function formatCareer(months) {
+  const years = Math.floor(months / 12)
+  const rest = months % 12
+  if(years === 0) return `${rest}개월`
+  if(rest === 0) return `${years}년`
+  return `${years}년 ${rest}개월`
+}

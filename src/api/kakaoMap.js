@@ -52,3 +52,22 @@ export async function searchPlaces(keyword) {
     )
   })
 }
+
+// 카카오맵 길찾기 주소 (휴대폰은 카카오맵 앱, PC는 웹으로 열린다)
+export function kakaoDirectionsUrl({ name, lat, lng }) {
+  return `https://map.kakao.com/link/to/${encodeURIComponent(name)},${lat},${lng}`
+}
+
+// container(div)에 지도를 그리고 장소에 핀 1개 (FR-08). 핀을 누르면 길찾기
+// shouldStop: SDK를 기다리는 사이 화면이 바뀌었으면 true → 그리지 않는다
+export async function drawMapWithPin(container, { name, lat, lng }, shouldStop) {
+  const kakao = await loadKakaoMap()
+  if(shouldStop()) return
+
+  const position = new kakao.maps.LatLng(lat, lng)
+  const map = new kakao.maps.Map(container, { center: position, level: 4 }) // level: 작을수록 확대
+  const marker = new kakao.maps.Marker({ map, position })
+  kakao.maps.event.addListener(marker, 'click', () => {
+    window.open(kakaoDirectionsUrl({ name, lat, lng }), '_blank')
+  })
+}
