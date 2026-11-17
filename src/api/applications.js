@@ -47,3 +47,36 @@ export async function countPendingApplications(matchId) {
   if (error) throw error
   return count
 }
+
+// 신청 수락 (FR-10) — 007의 DB 함수
+// 한 번에: 수락 + 같은 경기 나머지 거절 + 경기 확정 + 상대 팀의 같은 날 다른 대기 신청 자동 취소
+// 돌려받는 값: 확정된 경기 id
+export async function acceptApplication(applicationId) {
+  const  { data, error } = await supabase.rpc('accept_application', {
+    p_application_id: applicationId,
+  })
+  if (error) throw error
+  return data
+}
+
+// 받은 신청 (FR-10 S-06) — 내 운영진 팀이 올린 모집중 경기 + 그 경기의 대기 신청
+// 돌려받는 값: [{ id, match_date, …, host_team, match_applications: [{ id, team: {…} }, …] }, …]
+export async function getReceivedApplications(teamIds, fromDate) {
+  if (teamIds.length === 0) return []
+  const { data, error } = await supabase
+    .from('matches')
+    .select(`
+      id, match_date, start_time, end_time, place_name,
+      host_team:teams!matches_host_team_id_fkey (id, name),
+      match_applications (id, status, created_at, team:teams (id, name, district, gender_type))
+    `)
+    .in('host_team_id', teamIds) // 내 운영진 팀이 올린 경기
+    .eq('status', '모집중')
+    .gte('match_date', fromDate) // 오늘 이후
+    .eq('match_applications.status', '대기') // 하위 표: 대기 신청만
+    .order('match_date')
+    .order('start_time')
+    .order('created_at', { referencedTable: 'match_applications' }) // 하위 표: 먼저 신청한 팀이 위
+  if (error) throw error
+  return data
+}

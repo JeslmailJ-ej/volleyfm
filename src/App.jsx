@@ -10,6 +10,7 @@ import WeekMatchList from './components/WeekMatchList'
 import { Routes, Route, Link } from 'react-router'
 import MatchDetail from './pages/MatchDetail'
 import DevLogin from './components/DevLogin'
+import ManageApplications from './pages/ManageApplications'
 
 export default function App() {
   const [user, setUser] = useState(null)
@@ -76,7 +77,8 @@ export default function App() {
     return (
       <div>
         <p>
-          {profile.nickname}님 안녕하세요 <button onClick={signOut}>로그아웃</button>
+          {profile.nickname}님 안녕하세요 <button onClick={signOut}>로그아웃</button>{' '}
+          <Link to='/manage'>신청 관리</Link>
         </p>
 
         <WeekMatchList refreshKey={matchVersion} />
@@ -118,6 +120,7 @@ export default function App() {
         path="/matches/:matchId" 
         element={<MatchDetail user={user} teams={teams} mainTeamId={profile?.main_team_id} />} 
       />
+      <Route path='/manage' element={<ManageApplications user={user} teams={teams} />} />
       <Route path="*" element={<div><p>페이지를 찾을 수 없어요</p><Link to="/">홈으로</Link></div>} />
     </Routes>
   )

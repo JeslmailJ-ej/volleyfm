@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router'
 import { isUpcoming } from '../utils/date'
 import { signInWithKakao } from '../api/auth'
 import { countPendingApplications } from '../api/applications'
@@ -30,7 +31,11 @@ export default function MatchBottomArea({ match, user, teams, mainTeamId }) {
   }
 
   // ---- 여기부터 모집중 ----
-  if (isHostMember) return <HostArea matchId={match.id} />
+  if (isHostMember) {
+    // 등록 팀의 '운영진'인가 → [신청 관리] 버튼은 운영진에게만 (FR-08 3번 표)
+    const isHostAdmin = teams.some(({ role, team }) => role === '운영진' && team.id === match.host_team.id)
+    return <HostArea matchId={match.id} isHostAdmin={isHostAdmin} />
+  }
 
   if (!user) return <button onClick={() => signInWithKakao()}>로그인하고 신청하기</button>
 
@@ -49,7 +54,7 @@ export default function MatchBottomArea({ match, user, teams, mainTeamId }) {
 }
 
 // 등록 팀 팀원이 볼 때: 받은 신청 수 (Hook을 쓰려고 작은 컴포넌트로 뺐다)
-function HostArea({ matchId }) {
+function HostArea({ matchId, isHostAdmin }) {
   const [count, setCount] = useState(null)
 
   useEffect(() => {
@@ -63,7 +68,7 @@ function HostArea({ matchId }) {
   return (
     <div>
       <p>우리 팀이 올린 경기예요{count !== null && ` · 신청 ${count}팀`}</p>
-      <button disabled>신청 관리 (준비 중)</button>
+      {isHostAdmin && <Link to='/manage'>신청 관리</Link>}
     </div>
   )
 }
