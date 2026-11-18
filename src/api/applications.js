@@ -80,3 +80,23 @@ export async function getReceivedApplications(teamIds, fromDate) {
   if (error) throw error
   return data
 }
+
+// 보낸 신청 (S-06) — 내 운영진 팀이 넣은 신청 + 그 경기 정보 (오늘 이후 경기만, 최신 신청이 위)
+export async function getSentApplications(teamIds, fromDate) {
+  if (teamIds.length === 0) return []
+  const { data, error } = await supabase
+    .from('match_applications')
+    .select(`
+      id, status, created_at, cancelled_by,
+      team:teams (id, name),
+      match:matches!inner (
+        id, match_date, start_time, status, cancelled_by,
+        host_team:teams!matches_host_team_id_fkey (id, name)
+      )
+    `)
+    .in('team_id', teamIds)
+    .gte('match.match_date', fromDate)
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return data
+}

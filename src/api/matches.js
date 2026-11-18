@@ -56,7 +56,7 @@ export async function getMatchesBetween(from, to) {
 // 상세 화면에 필요한 칸 (FR-08) — 목록보다 주소·좌표·하고 싶은 말·팀 소개가 더 필요하다
 const MATCH_DETAIL_COLUMNS = `
   id, match_date, start_time, end_time, place_name, place_address, lat, lng,
-  match_format, gender_type, message, status,
+  match_format, gender_type, message, status, created_by,
   host_team:teams!matches_host_team_id_fkey (id, name, district, gender_type, intro),
   opponent_team:teams!matches_opponent_team_id_fkey (id, name, district)
 `
@@ -87,4 +87,10 @@ export async function hasTeamMatchOn(teamId, date) {
     .or(`host_team_id.eq.${teamId},opponent_team_id.eq.${teamId}`) // 등록 팀이거나 상대 팀
   if(error) throw error
   return count > 0
+}
+
+// 모집중 경기 취소 (FR-11 B) — 008의 DB 함수. 대기 신청도 한 번에 취소된다
+export async function cancelMatch(matchId) {
+  const { error } = await supabase.rpc('cancel_match', { p_match_id: matchId})
+  if (error) throw error
 }

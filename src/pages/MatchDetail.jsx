@@ -16,6 +16,7 @@ export default function MatchDetail({ user, teams, mainTeamId }) {
   const [errorMessage, setErrorMessage] = useState('')
   const [stats, setStats] = useState(null)
   const [shareMessage, setShareMessage] = useState('')
+  const [version, setVersion] = useState(0)
 
   useEffect(() => {
     let ignore = false // WeekMatchList와 같은 이유: 늦게 온 옛날 응답 무시
@@ -29,7 +30,7 @@ export default function MatchDetail({ user, teams, mainTeamId }) {
       })
       .finally(() => { if (!ignore) setLoading(false) })
     return () => { ignore = true }
-  }, [matchId]) // 주소의 경기 ID가 바뀌면 다시 불러온다
+  }, [matchId, version]) // 주소의 경기 ID가 바뀌면 다시 불러온다
 
   const hostTeamId = match?.host_team.id // 아직 경기가 없으면(null) 오류 대신 undefined
   useEffect(() => {
@@ -118,7 +119,13 @@ export default function MatchDetail({ user, teams, mainTeamId }) {
       )}
 
       <hr />
-      <MatchBottomArea match={match} user={user} teams={teams} mainTeamId={mainTeamId} />
+      <MatchBottomArea 
+        match={match} 
+        user={user} 
+        teams={teams} 
+        mainTeamId={mainTeamId} 
+        onChanged={() => setVersion((v) => v + 1)}
+      />
     </div>
   )
 }

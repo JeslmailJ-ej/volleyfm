@@ -3,11 +3,12 @@ import { Link } from 'react-router'
 import { isUpcoming } from '../utils/date'
 import { signInWithKakao } from '../api/auth'
 import { countPendingApplications } from '../api/applications'
+import { cancelMatch } from '../api/matches'
 import ApplyArea from './ApplyArea'
 
 // 상세 화면 하단 (FR-08 3번 표 + FR-09 3번 표) — 위에서부터 순서대로 확인한다
 // props: match, user(로그인 안 했으면 null), teams = 내가 속한 팀 [{ role, team }], mainTeamId
-export default function MatchBottomArea({ match, user, teams, mainTeamId }) {
+export default function MatchBottomArea({ match, user, teams, mainTeamId, onChanged }) {
   const myTeamIds = teams.map(({ team }) => team.id)
   const isHostMember = myTeamIds.includes(match.host_team.id) // 등록 팀 팀원인가
   const isOpponentMember = match.opponent_team !== null && myTeamIds.includes(match.opponent_team.id)
@@ -34,7 +35,8 @@ export default function MatchBottomArea({ match, user, teams, mainTeamId }) {
   if (isHostMember) {
     // 등록 팀의 '운영진'인가 → [신청 관리] 버튼은 운영진에게만 (FR-08 3번 표)
     const isHostAdmin = teams.some(({ role, team }) => role === '운영진' && team.id === match.host_team.id)
-    return <HostArea matchId={match.id} isHostAdmin={isHostAdmin} />
+    const canCancel = isHostAdmin || match.created_by === user.id
+    return <HostArea match={match} isHostAdmin={isHostAdmin} canCancel={canCancel} onChanged={onChanged} />
   }
 
   if (!user) return <button onClick={() => signInWithKakao()}>로그인하고 신청하기</button>
@@ -54,21 +56,47 @@ export default function MatchBottomArea({ match, user, teams, mainTeamId }) {
 }
 
 // 등록 팀 팀원이 볼 때: 받은 신청 수 (Hook을 쓰려고 작은 컴포넌트로 뺐다)
-function HostArea({ matchId, isHostAdmin }) {
+function HostArea({ match, isHostAdmin, canCancel, onChanged }) {
   const [count, setCount] = useState(null)
+  const [canceling, setCanceling] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
     let ignore = false
-    countPendingApplications(matchId)
+    countPendingApplications(match.id)
       .then((n) => { if (!ignore) setCount(n) })
       .catch(console.error)
     return () => { ignore = true }
-  }, [matchId])
+  }, [match.id])
+
+  async function handleCancelMatch() {
+    const text = count > 0 
+      ? `경기를 취소할까요? 신청한 ${count}팀에게 취소됐다고 표시돼요.`
+      : '경기를 취소할까요?'
+    if (!window.confirm(text)) return
+
+    setCanceling(true)
+    setErrorMessage('')
+    try{
+      await cancelMatch(match.id)
+      onChanged()
+    } catch(err) {
+      console.error(err)
+      setErrorMessage(err.message ?? '잠시 후 다시 시도해 주세요')
+      setCanceling(false)
+    }
+  }
 
   return (
     <div>
       <p>우리 팀이 올린 경기예요{count !== null && ` · 신청 ${count}팀`}</p>
-      {isHostAdmin && <Link to='/manage'>신청 관리</Link>}
+      {isHostAdmin && <Link to='/manage'>신청 관리</Link>}{' '}
+      {canCancel && (
+        <button onClick={handleCancelMatch} disabled={canceling}>
+          {canceling ? '취소 중...' : '경기 취소'}
+        </button>
+      )}
+      {errorMessage && <p style={{ color: 'crimson' }}>{errorMessage}</p>}
     </div>
   )
 }

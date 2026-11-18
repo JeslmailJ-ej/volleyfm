@@ -3,6 +3,7 @@ import { Link } from 'react-router'
 import { getReceivedApplications, acceptApplication } from '../api/applications'
 import { getTeamStats } from '../api/teams'
 import { formatDayLabel, formatCareer, isUpcoming, todayString } from '../utils/date'
+import SentApplications from '../components/SentApplications'
 
 // S-06 신청 관리 > 받은 신청 (FR-10) — 주소: /manage
 // 내가 운영진인 팀이 올린 모집중 경기와, 그 경기에 들어온 대기 신청
@@ -107,7 +108,7 @@ export default function ManageApplications({ user, teams }) {
                 {m.match_applications.map((a) => (
                   <li key={a.id}>
                     <b>{a.team.name}</b> ({a.team.district} · {a.team.gender_type})
-                    <TeamCareer teamId={a.team.id} />{' '}
+                    <TeamCareer teamId={a.team.id} />{' '} 
                     <button onClick={() => handleAccept(m, a)} disabled={acceptingId !== null}>
                       {acceptingId === a.id ? '확정 중...' : '수락'}
                     </button>
@@ -118,9 +119,13 @@ export default function ManageApplications({ user, teams }) {
           </section>
         ))
       )}
+
+      <SentApplications userId={user.id} adminTeamIds={adminTeamIds} />
     </div>
   )
 }
+
+//TeamCareer는 다른데에 있는걸로 아는데 굳이 여기서 또 만들어?
 
 // 신청 팀의 평균 경력 한 줄 (005 get_team_stats) — 팀마다 따로 불러오려고 작은 컴포넌트로
 function TeamCareer({ teamId }) {
