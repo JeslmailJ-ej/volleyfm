@@ -4,6 +4,7 @@ import { isUpcoming } from '../utils/date'
 import { signInWithKakao } from '../api/auth'
 import { countPendingApplications } from '../api/applications'
 import { cancelMatch } from '../api/matches'
+import { getAcceptedApplicationId } from '../api/chat'
 import ApplyArea from './ApplyArea'
 
 // 상세 화면 하단 (FR-08 3번 표 + FR-09 3번 표) — 위에서부터 순서대로 확인한다
@@ -21,12 +22,7 @@ export default function MatchBottomArea({ match, user, teams, mainTeamId, onChan
       const otherName = isHostMember 
         ? match.opponent_team?.name ?? '상대 팀 미정' 
         :  match.host_team.name // 우리 쪽에서 본 상대
-      return (
-        <div>
-          <p>확정된 경기예요 · vs {otherName}</p>
-          <button disabled>채팅하기 (준비 중)</button>
-        </div>
-      )
+      return <ConfirmedArea matchId={match.id} otherName={otherName} />
     }
     return <p>모집이 마감된 경기예요</p>
   }
@@ -97,6 +93,27 @@ function HostArea({ match, isHostAdmin, canCancel, onChanged }) {
         </button>
       )}
       {errorMessage && <p style={{ color: 'crimson' }}>{errorMessage}</p>}
+    </div>
+  )
+}
+
+function ConfirmedArea({ matchId, otherName }) {
+  const [ applicationId, setApplicationId ] = useState(null)
+
+  useEffect(() => {
+    let ignore = false
+    getAcceptedApplicationId(matchId)
+      .then((id) => { if (!ignore) setApplicationId(id) })
+      .catch(console.error)
+    return () => { ignore = true }
+  }, [matchId])
+
+  return(
+    <div>
+      <p>확정된 경기예요 · vs {otherName}</p>
+      { applicationId
+        ? <Link to={`/chats/${applicationId}`}>채팅하기</Link>
+        : <button disabled>채팅하기</button> }
     </div>
   )
 }
